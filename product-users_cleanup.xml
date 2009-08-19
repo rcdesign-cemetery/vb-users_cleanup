@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<product productid="users_cleanup" active="1">
+	<title>Users Cleanup</title>
+	<description />
+	<version>0.1</version>
+	<url><![CDATA[http://www.vbulletin.org/forum/misc.php?do=producthelp&pid=users_cleanup]]></url>
+	<versioncheckurl><![CDATA[http://www.vbulletin.org/forum/misc.php?do=productcheck&pid=users_cleanup]]></versioncheckurl>
+	<apm_releasedate>0</apm_releasedate>
+	<apm_author />
+	<apm_relatedurl />
+	<apm_extrainfo />
+	<apm_extraedit />
+	<dependencies>
+	</dependencies>
+	<codes>
+		<code version="0.1">
+			<installcode><![CDATA[$db->query( "
+  CREATE TABLE IF NOT EXISTS `" . TABLE_PREFIX . "userscleanup` (
+    `userscleanupid` int(10) unsigned NOT NULL auto_increment,
+    `title` varchar(255) NOT NULL,
+    `displayorder` int(10) unsigned NOT NULL,
+    `active` tinyint(3) unsigned NOT NULL default '0',
+    PRIMARY KEY  (`userscleanupid`),
+    KEY `active` (`active`)
+  ) ENGINE=MyISAM
+" );
+
+$db->query( "
+  CREATE TABLE IF NOT EXISTS `" . TABLE_PREFIX . "userscleanupcriteria` (
+    `userscleanupid` int(10) unsigned NOT NULL,
+    `criteriaid` varchar(255) NOT NULL,
+    `condition1` varchar(255) NOT NULL,
+    `condition2` varchar(255) NOT NULL,
+    `condition3` varchar(255) NOT NULL,
+    PRIMARY KEY  (`userscleanupid`,`criteriaid`)
+  ) ENGINE=MyISAM
+" );
+
+$db->query_write("
+  ALTER TABLE `". TABLE_PREFIX ."administrator`
+    ADD `admin_users_cleanup` BOOL DEFAULT '0' NOT NULL
+");]]></installcode>
+			<uninstallcode><![CDATA[$db->hide_errors();
+
+$db->query_write("DROP TABLE `". TABLE_PREFIX ."userscleanup`");
+
+$db->query_write("DROP TABLE `". TABLE_PREFIX ."userscleanupcriteria`");
+
+$db->query_write("ALTER TABLE `". TABLE_PREFIX ."administrator` DROP `admin_users_cleanup`");
+
+$db->show_errors();]]></uninstallcode>
+		</code>
+	</codes>
+	<templates>
+	</templates>
+	<plugins>
+		<plugin active="1" executionorder="5">
+			<title>Add valid field to DM</title>
+			<hookname>admindata_start</hookname>
+			<phpcode><![CDATA[$this->validfields['admin_users_cleanup'] = array(TYPE_BOOL, REQ_NO);]]></phpcode>
+		</plugin>
+		<plugin active="1" executionorder="5">
+			<title>Show permission field</title>
+			<hookname>admin_permissions_form</hookname>
+			<phpcode><![CDATA[print_yes_no_row($vbphrase["admin_users_cleanup"], "admin_users_cleanup", $user['admin_users_cleanup']);]]></phpcode>
+		</plugin>
+		<plugin active="1" executionorder="5">
+			<title>Save permission</title>
+			<hookname>admin_permissions_process</hookname>
+			<phpcode><![CDATA[$vbulletin->input->clean_array_gpc('p', array(
+  'admin_users_cleanup' => TYPE_BOOL
+));
+
+$admindm->set('admin_users_cleanup', $vbulletin->GPC['admin_users_cleanup']);]]></phpcode>
+		</plugin>
+		<plugin active="1" executionorder="5">
+			<title>Check permissions</title>
+			<hookname>can_administer</hookname>
+			<phpcode><![CDATA[require_once(DIR . '/includes/functions_users_cleanup.php');
+users_cleanup_CheckPermissions($do, $admin, $return_value);]]></phpcode>
+		</plugin>
+	</plugins>
+	<phrases>
+		<phrasetype name="Control Panel Global" fieldname="cpglobal">
+			<phrase name="add_new_rule" date="1240575209" username="Dimit" version=""><![CDATA[Add new rule]]></phrase>
+			<phrase name="are_you_sure_want_to_delete_userscleanup_x" date="1240592286" username="Dimit" version=""><![CDATA[Are you sure you want to permanently delete the users cleanup rule <em>{1}</em>?
+<br />
+This operation cannot be un-done.]]></phrase>
+			<phrase name="count_deleted_posts_criteria" date="1240576748" username="Dimit" version=""><![CDATA[Count also deleted posts]]></phrase>
+			<phrase name="deleted_userscleanup_successfully" date="1240592380" username="Dimit" version=""><![CDATA[Deleted Users Cleanup Rule Successfully]]></phrase>
+			<phrase name="has_x_reg_days_criteria" date="1240576182" username="Dimit" version=""><![CDATA[User registered between {1} and {2} days ago]]></phrase>
+			<phrase name="in_main_usergroup_x_criteria" date="1240576448" username="Dimit" version=""><![CDATA[User belongs to main usergroup {1}]]></phrase>
+			<phrase name="in_second_usergroup_x_criteria" date="1240576583" username="Dimit" version=""><![CDATA[User belongs to secondary usergroup {1}]]></phrase>
+			<phrase name="not_in_main_usergroup_x_criteria" date="1240576486" username="Dimit" version=""><![CDATA[User does not belong to main usergroup {1}]]></phrase>
+			<phrase name="not_in_second_usergroup_x_criteria" date="1240576674" username="Dimit" version=""><![CDATA[User does not belong to secondary usergroup {1}]]></phrase>
+			<phrase name="users_cleanup" date="1239820610" username="Dimit" version=""><![CDATA[Cleanup]]></phrase>
+			<phrase name="users_cleanup_rules_manager" date="1239888466" username="Dimit" version=""><![CDATA[Users Cleanup Rules Manager]]></phrase>
+			<phrase name="userscleanup_if_elipsis" date="1240575492" username="Dimit" version=""><![CDATA[Apply this rule if...]]></phrase>
+		</phrasetype>
+		<phrasetype name="Permissions" fieldname="cppermission">
+			<phrase name="admin_users_cleanup" date="1239820255" username="Dimit" version=""><![CDATA[Can manage rules to cleanup users]]></phrase>
+		</phrasetype>
+		<phrasetype name="Scheduled Tasks" fieldname="cron">
+			<phrase name="task_users_cleanup_desc" date="1240931386" username="Dimit" version="0.1" />
+			<phrase name="task_users_cleanup_log" date="1240931386" username="Dimit" version="0.1" />
+			<phrase name="task_users_cleanup_title" date="1240931386" username="Dimit" version="0.1"><![CDATA[Users Cleanup]]></phrase>
+		</phrasetype>
+		<phrasetype name="Error Messages" fieldname="error">
+			<phrase name="deleted_users_cleanup_successfully" date="1239891995" username="Dimit" version=""><![CDATA[Users Cleanup rule successfully deleted]]></phrase>
+			<phrase name="no_users_cleanup_criteria_active" date="1239891956" username="Dimit" version=""><![CDATA[No active criteria]]></phrase>
+			<phrase name="saved_users_cleanup_x_successfully" date="1239892028" username="Dimit" version=""><![CDATA[Saved Users Cleanup rule <em>{1}</em> Successfully]]></phrase>
+		</phrasetype>
+	</phrases>
+	<options>
+	</options>
+	<helptopics>
+	</helptopics>
+	<cronentries>
+		<cron varname="users_cleanup" active="1" loglevel="0">
+			<filename>./includes/cron/users_cleanup.php</filename>
+			<scheduling weekday="-1" day="-1" hour="4" minute="10" />
+		</cron>
+	</cronentries>
+	<faqentries>
+	</faqentries>
+	<templateedits>
+	</templateedits>
+</product>
