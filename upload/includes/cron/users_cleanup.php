@@ -13,7 +13,7 @@
 error_reporting(E_ALL & ~E_NOTICE);
 if (!is_object($vbulletin->db))
 {
-  exit;
+    exit;
 }
 
 // ############################# REQUIRE ##################################
@@ -27,59 +27,39 @@ require_once(DIR . '/includes/functions_users_cleanup.php');
 
 $db =& $vbulletin->db;
 
-$userscleanup_result = $db->query("
-  SELECT *
-  FROM " . TABLE_PREFIX . "userscleanup
-  WHERE `active` = '1'
-  ORDER BY displayorder, title
-");
+$res = $db->query("
+    SELECT *
+    FROM " . TABLE_PREFIX . "userscleanup
+    WHERE `active` = '1'
+    ORDER BY displayorder
+    ");
 
-$userscleanup_count = $db->num_rows($userscleanup_result);
-
-if ($userscleanup_count)
+while ($rule = $db->fetch_array($res))
 {
-  while ($rule = $db->fetch_array($userscleanup_result))
-  {
-    $criteria = array();
 
-    $criteria_result = $db->query_read("
-      SELECT *
-      FROM " . TABLE_PREFIX . "userscleanupcriteria
-      WHERE userscleanupid = " . intval($rule['userscleanupid'])
-    );
+    $criteria = uc_get_cleanup_criterias($rule['userscleanupid']);
+    $users = uc_get_users($criteria);
 
-    while ($criteria_res = $db->fetch_array($criteria_result))
+    foreach ($users as $user)
     {
-      $criteria_res['active'] = '1';
-      $criteria["$criteria_res[criteriaid]"] = $criteria_res;
-    }
-
-    $db->free_result($criteria_result);
-
-    $searchquery = users_cleanup_Build_SQL_query($criteria);
-    $users       = $db->query_read($searchquery);
-
-    while ($user = $db->fetch_array($users))
-    {
-      // check user is not set in the $undeletable users string
-      if (!is_unalterable_user($user['userid']))
-      {
-        $info = fetch_userinfo($user['userid']);
-        if ($info)
+        // check user is not set in the $undeletable users string
+        if (!is_unalterable_user($user['userid']))
         {
-          $userdm =& datamanager_init('User', $vbulletin, ERRTYPE_CP);
-          $userdm->set_existing($info);
-          $userdm->delete();
-          unset($userdm);
+            $info = fetch_userinfo($user['userid']);
+            if ($info)
+            {
+                $userdm =& datamanager_init('User', $vbulletin, ERRTYPE_CP);
+                $userdm->set_existing($info);
+                $userdm->delete();
+                unset($userdm);
+            }
         }
-      }
     }
 
     $db->free_result($users);
-  }
 }
 
-$db->free_result($userscleanup_result);
+$db->free_result($res);
 
 log_cron_action('', $nextitem, 1);
 

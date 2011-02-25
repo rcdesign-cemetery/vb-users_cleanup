@@ -3,7 +3,7 @@
 <product productid="users_cleanup" active="1">
 	<title>Users Cleanup</title>
 	<description />
-	<version>0.1</version>
+	<version>0.3</version>
 	<url><![CDATA[http://www.vbulletin.org/forum/misc.php?do=producthelp&pid=users_cleanup]]></url>
 	<versioncheckurl><![CDATA[http://www.vbulletin.org/forum/misc.php?do=productcheck&pid=users_cleanup]]></versioncheckurl>
 	<apm_releasedate>0</apm_releasedate>
@@ -63,7 +63,7 @@ $db->show_errors();]]></uninstallcode>
 		<plugin active="1" executionorder="5">
 			<title>Show permission field</title>
 			<hookname>admin_permissions_form</hookname>
-			<phpcode><![CDATA[print_yes_no_row($vbphrase["admin_users_cleanup"], "admin_users_cleanup", $user['admin_users_cleanup']);]]></phpcode>
+			<phpcode><![CDATA[print_yes_no_row($vbphrase["uc_admin_users_cleanup"], "admin_users_cleanup", $user['admin_users_cleanup']);]]></phpcode>
 		</plugin>
 		<plugin active="1" executionorder="5">
 			<title>Save permission</title>
@@ -77,39 +77,45 @@ $admindm->set('admin_users_cleanup', $vbulletin->GPC['admin_users_cleanup']);]]>
 		<plugin active="1" executionorder="5">
 			<title>Check permissions</title>
 			<hookname>can_administer</hookname>
-			<phpcode><![CDATA[require_once(DIR . '/includes/functions_users_cleanup.php');
-users_cleanup_CheckPermissions($do, $admin, $return_value);]]></phpcode>
+			<phpcode><![CDATA[if (in_array('adminuserscleanup', $do))
+{
+    $return_value = $admin['admin_users_cleanup'] ? true : false;
+}]]></phpcode>
 		</plugin>
 	</plugins>
 	<phrases>
 		<phrasetype name="Control Panel Global" fieldname="cpglobal">
-			<phrase name="add_new_rule" date="1240575209" username="Dimit" version=""><![CDATA[Add new rule]]></phrase>
-			<phrase name="are_you_sure_want_to_delete_userscleanup_x" date="1240592286" username="Dimit" version=""><![CDATA[Are you sure you want to permanently delete the users cleanup rule <em>{1}</em>?
+			<phrase name="are_you_sure_want_to_delete_rule_x" date="1298556386" username="varnak" version=""><![CDATA[Are you sure you want to permanently delete the users cleanup rule <em>{1}</em>?
 <br />
 This operation cannot be un-done.]]></phrase>
-			<phrase name="count_deleted_posts_criteria" date="1240576748" username="Dimit" version=""><![CDATA[Count also deleted posts]]></phrase>
-			<phrase name="deleted_userscleanup_successfully" date="1240592380" username="Dimit" version=""><![CDATA[Deleted Users Cleanup Rule Successfully]]></phrase>
-			<phrase name="has_x_reg_days_criteria" date="1240576182" username="Dimit" version=""><![CDATA[User registered between {1} and {2} days ago]]></phrase>
-			<phrase name="in_main_usergroup_x_criteria" date="1240576448" username="Dimit" version=""><![CDATA[User belongs to main usergroup {1}]]></phrase>
-			<phrase name="in_second_usergroup_x_criteria" date="1240576583" username="Dimit" version=""><![CDATA[User belongs to secondary usergroup {1}]]></phrase>
-			<phrase name="not_in_main_usergroup_x_criteria" date="1240576486" username="Dimit" version=""><![CDATA[User does not belong to main usergroup {1}]]></phrase>
-			<phrase name="not_in_second_usergroup_x_criteria" date="1240576674" username="Dimit" version=""><![CDATA[User does not belong to secondary usergroup {1}]]></phrase>
-			<phrase name="users_cleanup" date="1239820610" username="Dimit" version=""><![CDATA[Cleanup]]></phrase>
-			<phrase name="users_cleanup_rules_manager" date="1239888466" username="Dimit" version=""><![CDATA[Users Cleanup Rules Manager]]></phrase>
-			<phrase name="userscleanup_if_elipsis" date="1240575492" username="Dimit" version=""><![CDATA[Apply this rule if...]]></phrase>
+			<phrase name="uc_add_new_rule" date="1298451188" username="varnak" version=""><![CDATA[Add new rule]]></phrase>
+			<phrase name="uc_admincp_menu_item" date="1298555989" username="varnak" version=""><![CDATA[Cleanup]]></phrase>
+			<phrase name="uc_deleted_userscleanup_successfully" date="1298451342" username="varnak" version=""><![CDATA[Deleted Users Cleanup Rule Successfully]]></phrase>
+			<phrase name="uc_has_never_posted_blog_enabled_criteria" date="1298647118" username="Vitaly" version=""><![CDATA[User has never posted. {1} Also count in social groups. {2} Also count in blogs.]]></phrase>
+			<phrase name="uc_has_never_posted_criteria" date="1298647077" username="Vitaly" version=""><![CDATA[User has never posted. {1} Also count in social groups.]]></phrase>
+			<phrase name="uc_has_x_postcount_criteria" date="1298450609" username="varnak" version=""><![CDATA[User's post-count is between {1} and {2} posts]]></phrase>
+			<phrase name="uc_has_x_reg_days_criteria" date="1298448544" username="varnak" version=""><![CDATA[User registered between {1} and {2} days ago]]></phrase>
+			<phrase name="uc_in_main_usergroup_x_criteria" date="1298448560" username="varnak" version=""><![CDATA[User belongs to main usergroup {1}]]></phrase>
+			<phrase name="uc_in_second_usergroup_x_criteria" date="1298448572" username="varnak" version=""><![CDATA[User belongs to secondary usergroup {1}]]></phrase>
+			<phrase name="uc_no_visit_in_x_days_criteria" date="1298450253" username="varnak" version=""><![CDATA[User has not visited for {1} days or more]]></phrase>
+			<phrase name="uc_not_in_main_usergroup_x_criteria" date="1298448594" username="varnak" version=""><![CDATA[User does not belong to main usergroup {1}]]></phrase>
+			<phrase name="uc_not_in_second_usergroup_x_criteria" date="1298448605" username="varnak" version=""><![CDATA[User does not belong to secondary usergroup {1}]]></phrase>
+			<phrase name="uc_user_id_not_in_criteria" date="1298450541" username="varnak" version=""><![CDATA[Users excluded from search {1} (comma separated ID list)]]></phrase>
+			<phrase name="uc_users_cleanup_rules_manager" date="1298451397" username="varnak" version=""><![CDATA[Users Cleanup Rules Manager]]></phrase>
+			<phrase name="uc_userscleanup_if_elipsis" date="1298451431" username="varnak" version=""><![CDATA[Apply this rule if...]]></phrase>
 		</phrasetype>
 		<phrasetype name="Permissions" fieldname="cppermission">
-			<phrase name="admin_users_cleanup" date="1239820255" username="Dimit" version=""><![CDATA[Can manage rules to cleanup users]]></phrase>
+			<phrase name="uc_admin_users_cleanup" date="1298555849" username="varnak" version=""><![CDATA[Can manage rules to cleanup users]]></phrase>
 		</phrasetype>
 		<phrasetype name="Scheduled Tasks" fieldname="cron">
-			<phrase name="task_users_cleanup_desc" date="1240931386" username="Dimit" version="0.1" />
-			<phrase name="task_users_cleanup_log" date="1240931386" username="Dimit" version="0.1" />
-			<phrase name="task_users_cleanup_title" date="1240931386" username="Dimit" version="0.1"><![CDATA[Users Cleanup]]></phrase>
+			<phrase name="task_users_cleanup_desc" date="1298471109" username="varnak" version="0.2" />
+			<phrase name="task_users_cleanup_log" date="1298471109" username="varnak" version="0.2" />
+			<phrase name="task_users_cleanup_title" date="1298471109" username="varnak" version="0.2"><![CDATA[Users Cleanup]]></phrase>
 		</phrasetype>
 		<phrasetype name="Error Messages" fieldname="error">
-			<phrase name="deleted_users_cleanup_successfully" date="1239891995" username="Dimit" version=""><![CDATA[Users Cleanup rule successfully deleted]]></phrase>
-			<phrase name="no_users_cleanup_criteria_active" date="1239891956" username="Dimit" version=""><![CDATA[No active criteria]]></phrase>
-			<phrase name="saved_users_cleanup_x_successfully" date="1239892028" username="Dimit" version=""><![CDATA[Saved Users Cleanup rule <em>{1}</em> Successfully]]></phrase>
+			<phrase name="uc_deleted_users_cleanup_successfully" date="1298450913" username="varnak" version=""><![CDATA[Users Cleanup rule successfully deleted]]></phrase>
+			<phrase name="uc_no_users_cleanup_criteria_active" date="1298450968" username="varnak" version=""><![CDATA[No active criteria]]></phrase>
+			<phrase name="uc_saved_users_cleanup_x_successfully" date="1298451466" username="varnak" version=""><![CDATA[Saved Users Cleanup rule <em>{1}</em> Successfully]]></phrase>
 		</phrasetype>
 	</phrases>
 	<options>

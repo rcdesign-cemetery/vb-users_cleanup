@@ -2,7 +2,7 @@
 <navgroups product="vbulletin">
         <navgroup phrase="users" permissions="adminuserscleanup" hr="true" displayorder="110">
 		        <navoption displayorder="150">
-                        <phrase>users_cleanup</phrase>
+                        <phrase>uc_admincp_menu_item</phrase>
                         <link>users_cleanup.php</link>
                 </navoption>
         </navgroup>
