@@ -51,6 +51,12 @@ $db->query_write("ALTER TABLE `". TABLE_PREFIX ."administrator` DROP `admin_user
 
 $db->show_errors();]]></uninstallcode>
 		</code>
+		<code version="0.3">
+			<installcode><![CDATA[$db->query( "ALTER TABLE " . TABLE_PREFIX . "userscleanup CHANGE `userscleanupid` `ruleid` INT( 10 ) UNSIGNED NOT NULL AUTO_INCREMENT" );
+
+$db->query( "ALTER TABLE " . TABLE_PREFIX . "userscleanupcriteria CHANGE `userscleanupid` `ruleid` INT( 10 ) UNSIGNED NOT NULL" );]]></installcode>
+			<uninstallcode />
+		</code>
 	</codes>
 	<templates>
 	</templates>
@@ -91,8 +97,7 @@ This operation cannot be un-done.]]></phrase>
 			<phrase name="uc_add_new_rule" date="1298451188" username="varnak" version=""><![CDATA[Add new rule]]></phrase>
 			<phrase name="uc_admincp_menu_item" date="1298555989" username="varnak" version=""><![CDATA[Cleanup]]></phrase>
 			<phrase name="uc_deleted_userscleanup_successfully" date="1298451342" username="varnak" version=""><![CDATA[Deleted Users Cleanup Rule Successfully]]></phrase>
-			<phrase name="uc_has_never_posted_blog_enabled_criteria" date="1298647118" username="Vitaly" version=""><![CDATA[User has never posted. {1} Also count in social groups. {2} Also count in blogs.]]></phrase>
-			<phrase name="uc_has_never_posted_criteria" date="1298647077" username="Vitaly" version=""><![CDATA[User has never posted. {1} Also count in social groups.]]></phrase>
+			<phrase name="uc_has_never_posted_criteria" date="1299082318" username="varnak" version=""><![CDATA[User has never posted (also count in social groups and blogs).]]></phrase>
 			<phrase name="uc_has_x_postcount_criteria" date="1298450609" username="varnak" version=""><![CDATA[User's post-count is between {1} and {2} posts]]></phrase>
 			<phrase name="uc_has_x_reg_days_criteria" date="1298448544" username="varnak" version=""><![CDATA[User registered between {1} and {2} days ago]]></phrase>
 			<phrase name="uc_in_main_usergroup_x_criteria" date="1298448560" username="varnak" version=""><![CDATA[User belongs to main usergroup {1}]]></phrase>

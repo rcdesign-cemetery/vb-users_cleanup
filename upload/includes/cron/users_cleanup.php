@@ -37,8 +37,8 @@ $res = $db->query("
 while ($rule = $db->fetch_array($res))
 {
 
-    $criteria = uc_get_cleanup_criterias($rule['userscleanupid']);
-    $users = uc_get_users($criteria);
+    $criterias = uc_get_cleanup_criterias($rule['ruleid']);
+    $users = uc_get_users($criterias);
 
     foreach ($users as $user)
     {

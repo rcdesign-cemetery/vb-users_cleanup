@@ -16,7 +16,7 @@ function uc_get_rule($rule_id)
             FROM
                 ' . TABLE_PREFIX . 'userscleanup
             WHERE 
-                userscleanupid = ' . (int)$rule_id;
+                ruleid = ' . (int)$rule_id;
     $rule = $db->query_first($sql);
     return $rule;
 }
@@ -28,7 +28,7 @@ function uc_get_cleanup_criterias($rule_id)
             FROM 
                 ' . TABLE_PREFIX . 'userscleanupcriteria
             WHERE
-                userscleanupid = ' . (int)$rule_id;
+                ruleid = ' . (int)$rule_id;
 
     $res = $db->query_read($sql);
 
@@ -118,18 +118,14 @@ function uc_get_users($criteria)
                 break;
             case 'has_never_posted':
                 // posts
-                $join[] = 'LEFT JOIN ' . TABLE_PREFIX . 'post AS post ON `post`.userid = `user`.userid';
-                $where[] = '`post`.postid IS NULL';
+                $where[] = '`user`.`posts` = 0';
                 
                 // social groups
-                if ($conditions['condition1'])
-                {
-                    $join[] = 'LEFT JOIN ' . TABLE_PREFIX . 'groupmessage ON `groupmessage`.postuserid = `user`.userid';
-                    $where[] = '`groupmessage`.gmid IS NULL';
-                }
+                $join[] = 'LEFT JOIN ' . TABLE_PREFIX . 'groupmessage ON `groupmessage`.postuserid = `user`.userid';
+                $where[] = '`groupmessage`.gmid IS NULL';
 
                 // blog
-                if ($vbulletin->products['vbblog'] AND $conditions['condition2'])
+                if ($vbulletin->products['vbblog'])
                 {
                     $join[] = 'LEFT JOIN ' . TABLE_PREFIX . 'blog_text ON `blog_text`.bloguserid = `user`.userid';
                     $where[] = '`blog_text`.blogtextid IS NULL';
@@ -143,10 +139,10 @@ function uc_get_users($criteria)
     }
     $sql = 'SELECT 
                 `user`.*
-                FROM 
-                    ' . TABLE_PREFIX . 'user AS user
-                ' . (!empty($join)? implode("\n", $join) :'') . '
-                WHERE 
+            FROM 
+                ' . TABLE_PREFIX . 'user AS user
+            ' . (!empty($join)? implode("\n", $join) :'') . '
+            WHERE 
                 ' . implode (' AND ', $where);
     $res = $db->query_read($sql);
 

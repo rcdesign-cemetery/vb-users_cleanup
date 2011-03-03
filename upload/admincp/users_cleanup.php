@@ -33,12 +33,12 @@ if (!can_administer('adminuserscleanup'))
 }
 
 $vbulletin->input->clean_array_gpc('r', array(
-    'userscleanupid' => TYPE_INT
+    'ruleid' => TYPE_INT
 ));
 
 log_admin_action(
-    $vbulletin->GPC['userscleanupid'] != 0
-    ? "userscleanup id = " . $vbulletin->GPC['userscleanupid']
+    $vbulletin->GPC['ruleid'] != 0
+    ? "userscleanup id = " . $vbulletin->GPC['ruleid']
     : ''
 );
 
@@ -51,13 +51,13 @@ require_once(DIR . '/includes/functions_users_cleanup.php');
 
 if (empty($_REQUEST['do']))
 {
-    if ($vbulletin->GPC['userscleanupid'])
+    if ($vbulletin->GPC['ruleid'])
     {
         $_REQUEST['do'] = 'edit';
     }
     else
     {
-        $_REQUEST['do'] = 'modify';
+        $_REQUEST['do'] = 'list';
     }
 }
 // #############################################################################
@@ -73,16 +73,16 @@ if ($_POST['do'] == 'remove')
     $sql = 
     $db->query_write("
         DELETE FROM " . TABLE_PREFIX . "userscleanupcriteria
-        WHERE userscleanupid = " . $vbulletin->GPC['userscleanupid']
+        WHERE ruleid = " . $vbulletin->GPC['ruleid']
     );
 
     // delete rule
     $db->query_write("
         DELETE FROM " . TABLE_PREFIX . "userscleanup
-        WHERE userscleanupid = " . $vbulletin->GPC['userscleanupid']
+        WHERE ruleid = " . $vbulletin->GPC['ruleid']
     );
 
-    define('CP_REDIRECT', 'users_cleanup.php?do=modify');
+    define('CP_REDIRECT', 'users_cleanup.php?do=list');
     print_stop_message('uc_deleted_users_cleanup_successfully');
 }
 
@@ -93,7 +93,7 @@ if ($_REQUEST['do'] == 'delete')
 {
     print_delete_confirmation(
         'userscleanup',
-        $vbulletin->GPC['userscleanupid'],
+        $vbulletin->GPC['ruleid'],
         'users_cleanup',
         'remove',
         'rule'
@@ -112,7 +112,7 @@ if ($_POST['do'] == 'update')
         'criteria'     => TYPE_ARRAY
     ));
 
-    $rule_id = $vbulletin->GPC['userscleanupid'];
+    $rule_id = $vbulletin->GPC['ruleid'];
 
     $createria_list = array();
     foreach ($vbulletin->GPC['criteria'] AS $criteria_id=>$criteria)
@@ -138,14 +138,14 @@ if ($_POST['do'] == 'update')
                 title        = '" . $db->escape_string($vbulletin->GPC['title']) . "',
                 displayorder = " . $vbulletin->GPC['displayorder'] . ",
                 active       = " . $vbulletin->GPC['active'] . "
-                WHERE
-                userscleanupid = " . $rule_id
+            WHERE
+                ruleid = " . $rule_id
         );
 
         // cleanup old criteria
         $db->query_write("
             DELETE FROM " . TABLE_PREFIX . "userscleanupcriteria
-            WHERE userscleanupid = " . $rule_id
+            WHERE ruleid = " . $rule_id
         );
     }
     else
@@ -183,11 +183,11 @@ if ($_POST['do'] == 'update')
     // save criterias
     $db->query_write("
         INSERT INTO " . TABLE_PREFIX . "userscleanupcriteria
-        (userscleanupid, criteriaid, condition1, condition2, condition3)
+            (ruleid, criteriaid, condition1, condition2, condition3)
         VALUES " . implode(', ', $criteria_sql)
     );
 
-    define('CP_REDIRECT', 'users_cleanup.php?do=modify');
+    define('CP_REDIRECT', 'users_cleanup.php?do=list');
     print_stop_message('uc_saved_users_cleanup_x_successfully', $vbulletin->GPC['title']);
 }
 
@@ -197,17 +197,17 @@ if ($_POST['do'] == 'update')
 if ($_REQUEST['do'] == 'edit' OR $_REQUEST['do'] == 'add')
 {
     $rule_id = 0;
-    if ($vbulletin->GPC_exists['userscleanupid'])
+    if ($vbulletin->GPC_exists['ruleid'])
     {
-        $rule_id = $vbulletin->GPC['userscleanupid'];
+        $rule_id = $vbulletin->GPC['ruleid'];
     }
     // are we editing or adding?
     if ($rule_id)
     {
-        $rule = uc_get_rule($vbulletin->GPC['userscleanupid']);
+        $rule = uc_get_rule($rule_id);
         if (!empty($rule))
         {
-            $criteria_cache = uc_get_cleanup_criterias($vbulletin->GPC['userscleanupid']);
+            $criteria_cache = uc_get_cleanup_criterias($rule_id);
 
             $table_title =
                 $vbphrase['edit_userscleanup_rule']
@@ -283,18 +283,12 @@ if ($_REQUEST['do'] == 'edit' OR $_REQUEST['do'] == 'add')
             $criteria_cache['has_x_postcount']['condition2'] .
             '" />'
         ),
-        
-        'has_never_posted' => array(
-            '<input type="checkbox" name="criteria[has_never_posted][condition1]" tabindex="1" value="1" '.
-            ($criteria_cache['has_never_posted']['condition1']?'checked="checked"':'') .
-            ' />',
-        ),
-        
+        'has_never_posted' => array(),
     );
 
     // build the editor form
     print_form_header('users_cleanup', 'update');
-    construct_hidden_code('userscleanupid', $rule_id);
+    construct_hidden_code('ruleid', $rule_id);
     print_table_header($table_title);
 
     print_input_row($vbphrase['title'] . '<dfn>' . $vbphrase['userscleanup_title_description'] . '</dfn>', 'title', $rule['title'], 0, 60);
@@ -306,18 +300,7 @@ if ($_REQUEST['do'] == 'edit' OR $_REQUEST['do'] == 'add')
 
     foreach ($criteria_options AS $criteria_option_id => $criteria_option)
     { 
-        if ('has_never_posted' == $criteria_option_id AND $vbulletin->products['vbblog'])
-        {
-            // additional checkbox for vbBlog
-            $phrase_id = 'uc_' . $criteria_option_id . '_blog_enabled_criteria';
-            $criteria_option[] = '<input type="checkbox" name="criteria[has_never_posted][condition2]" tabindex="1" value="1" '.
-                ($criteria_cache['has_never_posted']['condition2']?'checked="checked"':'') .
-                ' />';
-        }
-        else
-        {
-            $phrase_id = 'uc_' . $criteria_option_id . '_criteria';
-        }
+        $phrase_id = 'uc_' . $criteria_option_id . '_criteria';
 
         // the criteria options can't trigger the checkbox to change, we need to break out of the label
         $criteria_text = '<label>' . construct_phrase($vbphrase[$phrase_id],
@@ -477,20 +460,20 @@ if ($_POST['do'] == 'quickupdate')
     $rules_dispord       = array();
 
     $userscleanup_result = $db->query_read("
-        SELECT userscleanupid, displayorder, active
+        SELECT ruleid, displayorder, active
         FROM " . TABLE_PREFIX . "userscleanup
     ");
 
     while ($rule = $db->fetch_array($userscleanup_result))
     {
-        $rules_dispord["$rule[userscleanupid]"] = $rule['displayorder'];
+        $rules_dispord["$rule[ruleid]"] = $rule['displayorder'];
 
-        if (intval($rule['active'])  != $vbulletin->GPC['active'][$rule['userscleanupid']]
-            OR $rule['displayorder'] != $vbulletin->GPC['displayorder'][$rule['userscleanupid']])
+        if (intval($rule['active'])  != $vbulletin->GPC['active'][$rule['ruleid']]
+            OR $rule['displayorder'] != $vbulletin->GPC['displayorder'][$rule['ruleid']])
         {
-            $update_ids          .= ",$rule[userscleanupid]";
-            $update_active       .= " WHEN $rule[userscleanupid] THEN " . intval($vbulletin->GPC['active'][$rule['userscleanupid']]);
-            $update_displayorder .= " WHEN $rule[userscleanupid] THEN " . $vbulletin->GPC['displayorder'][$rule['userscleanupid']];
+            $update_ids          .= ",$rule[ruleid]";
+            $update_active       .= " WHEN $rule[ruleid] THEN " . intval($vbulletin->GPC['active'][$rule['ruleid']]);
+            $update_displayorder .= " WHEN $rule[ruleid] THEN " . $vbulletin->GPC['displayorder'][$rule['ruleid']];
         }
     }
 
@@ -502,22 +485,22 @@ if ($_POST['do'] == 'quickupdate')
             UPDATE
                 " . TABLE_PREFIX . "userscleanup
             SET
-                active       = CASE userscleanupid $update_active       ELSE active END,
-                displayorder = CASE userscleanupid $update_displayorder ELSE displayorder END
+                active       = CASE ruleid $update_active       ELSE active END,
+                displayorder = CASE ruleid $update_displayorder ELSE displayorder END
             WHERE
-                userscleanupid IN($update_ids)");
+                ruleid IN($update_ids)");
     }
 
     // handle swapping
     if (!empty($vbulletin->GPC['displayorderswap']))
     {
-        list($orig_userscleanupid, $swap_direction) = explode(',', $vbulletin->GPC['displayorderswap'][0]);
+        list($orig_rule_id, $swap_direction) = explode(',', $vbulletin->GPC['displayorderswap'][0]);
 
-        if (isset($vbulletin->GPC['displayorder']["$orig_userscleanupid"]))
+        if (isset($vbulletin->GPC['displayorder']["$orig_rule_id"]))
         {
-            $userscleanup_orig = array(
-                'userscleanupid' => $orig_userscleanupid,
-                'displayorder'   => $vbulletin->GPC['displayorder']["$orig_userscleanupid"]
+            $rule_orig = array(
+                'ruleid' => $orig_rule_id,
+                'displayorder'   => $vbulletin->GPC['displayorder']["$orig_rule_id"]
             );
 
             switch ($swap_direction)
@@ -540,26 +523,26 @@ if ($_POST['do'] == 'quickupdate')
                     $sort = false;
                 }
             }
-            $userscleanup_swap = $db->query_first("
-                SELECT userscleanupid, displayorder
+            $rule_swap = $db->query_first("
+                SELECT ruleid, displayorder
                 FROM " . TABLE_PREFIX . "userscleanup
-                WHERE displayorder " . $comp . $userscleanup_orig['displayorder'] ."
+                WHERE displayorder " . $comp . $rule_orig['displayorder'] ."
                 ORDER BY displayorder $sort, title ASC
                 LIMIT 1");
-            if ($comp AND $sort AND $userscleanup_swap)
+            if ($comp AND $sort AND $rule_swap)
             {
                 $db->query_write("
                     UPDATE " . TABLE_PREFIX . "userscleanup
-                    SET displayorder = CASE userscleanupid
-                        WHEN $userscleanup_orig[userscleanupid] THEN $userscleanup_swap[displayorder]
-                        WHEN $userscleanup_swap[userscleanupid] THEN $userscleanup_orig[displayorder]
+                    SET displayorder = CASE ruleid
+                        WHEN $rule_orig[ruleid] THEN $rule_swap[displayorder]
+                        WHEN $rule_swap[ruleid] THEN $rule_orig[displayorder]
                         ELSE displayorder END
-                    WHERE userscleanupid IN($userscleanup_orig[userscleanupid], $userscleanup_swap[userscleanupid])");
+                    WHERE ruleid IN($rule_orig[ruleid], $rule_swap[ruleid])");
             }
         }
     }
 
-    $_REQUEST['do'] = 'modify';
+    $_REQUEST['do'] = 'list';
 }
 
 // #############################################################################
@@ -572,12 +555,14 @@ if ($_REQUEST['do'] == 'test')
 
     $criteria = array();
 
-    if ($vbulletin->GPC['userscleanupid'] > 0 AND empty($vbulletin->GPC['criteria']))
+    if ($vbulletin->GPC['ruleid'] > 0 AND empty($vbulletin->GPC['criteria']))
     {
-        $criteria = uc_get_cleanup_criterias($vbulletin->GPC['userscleanupid']);
+        // run test from rule manager 
+        $criteria = uc_get_cleanup_criterias($vbulletin->GPC['ruleid']);
     }
     else
     {
+        // run test from add/edit form
         foreach ($vbulletin->GPC['criteria'] AS $criteria_id => $criteria_res)
         {
             if ($criteria_res['active'])
@@ -601,11 +586,12 @@ if ($_REQUEST['do'] == 'test')
     }
     if (1 == count($users))
     {
+        $user = current($users);
         // show a user if there is just one found
         exec_header_redirect(
             "user.php?"
             . $vbulletin->session->vars['sessionurl']
-            . "do=edit&u=" . $users[0]['userid']
+            . "do=edit&u=" . $user['userid']
         );
     }
 
@@ -728,7 +714,7 @@ if ($_REQUEST['do'] == 'test')
 
 // #############################################################################
 // list existing rules
-if ($_REQUEST['do'] == 'modify')
+if ($_REQUEST['do'] == 'list')
 {
     print_form_header('users_cleanup', 'quickupdate');
     print_column_style_code(array('width:100%', 'white-space:nowrap'));
@@ -743,15 +729,15 @@ if ($_REQUEST['do'] == 'modify')
         while ($rule = $db->fetch_array($userscleanup_result))
         {
             print_label_row(
-                '<a href="users_cleanup.php?' . $vbulletin->session->vars['sessionurl'] . 'do=edit&amp;userscleanupid=' . $rule['userscleanupid'] . '" title="' . $vbphrase['edit_userscleanup_rule'] . '">' . $rule['title'] . '</a>',
+                '<a href="users_cleanup.php?' . $vbulletin->session->vars['sessionurl'] . 'do=edit&amp;ruleid=' . $rule['ruleid'] . '" title="' . $vbphrase['edit_userscleanup_rule'] . '">' . $rule['title'] . '</a>',
                 '<div style="white-space:nowrap">' .
-                '<label class="smallfont"><input type="checkbox" name="active[' . $rule['userscleanupid'] . ']" value="1"' . ($rule['active'] ? ' checked="checked"' : '') . ' />' . $vbphrase['active'] . '</label> ' .
-                '<input type="image" src="../cpstyles/' . $vbulletin->options['cpstylefolder'] . '/move_down.gif" name="displayorderswap[' . $rule['userscleanupid'] . ',higher]" />' .
-                '<input type="text" name="displayorder[' . $rule['userscleanupid'] . ']" value="' . $rule['displayorder'] . '" class="bginput" size="4" title="' . $vbphrase['display_order'] . '" style="text-align:' . $stylevar['right'] . '" />' .
-                '<input type="image" src="../cpstyles/' . $vbulletin->options['cpstylefolder'] . '/move_up.gif" name="displayorderswap[' . $rule['userscleanupid'] . ',lower]" />' .
-                construct_link_code($vbphrase['edit'], 'users_cleanup.php?' . $vbulletin->session->vars['sessionurl'] . 'do=edit&amp;userscleanupid=' . $rule['userscleanupid']) .
-                construct_link_code($vbphrase['test'], 'users_cleanup.php?' . $vbulletin->session->vars['sessionurl'] . 'do=test&amp;userscleanupid=' . $rule['userscleanupid']) .
-                construct_link_code($vbphrase['delete'], 'users_cleanup.php?' . $vbulletin->session->vars['sessionurl'] . 'do=delete&amp;userscleanupid=' . $rule['userscleanupid']) .
+                '<label class="smallfont"><input type="checkbox" name="active[' . $rule['ruleid'] . ']" value="1"' . ($rule['active'] ? ' checked="checked"' : '') . ' />' . $vbphrase['active'] . '</label> ' .
+                '<input type="image" src="../cpstyles/' . $vbulletin->options['cpstylefolder'] . '/move_down.gif" name="displayorderswap[' . $rule['ruleid'] . ',higher]" />' .
+                '<input type="text" name="displayorder[' . $rule['ruleid'] . ']" value="' . $rule['displayorder'] . '" class="bginput" size="4" title="' . $vbphrase['display_order'] . '" style="text-align:' . $stylevar['right'] . '" />' .
+                '<input type="image" src="../cpstyles/' . $vbulletin->options['cpstylefolder'] . '/move_up.gif" name="displayorderswap[' . $rule['ruleid'] . ',lower]" />' .
+                construct_link_code($vbphrase['edit'], 'users_cleanup.php?' . $vbulletin->session->vars['sessionurl'] . 'do=edit&amp;ruleid=' . $rule['ruleid']) .
+                construct_link_code($vbphrase['test'], 'users_cleanup.php?' . $vbulletin->session->vars['sessionurl'] . 'do=test&amp;ruleid=' . $rule['ruleid']) .
+                construct_link_code($vbphrase['delete'], 'users_cleanup.php?' . $vbulletin->session->vars['sessionurl'] . 'do=delete&amp;ruleid=' . $rule['ruleid']) .
                 '</div>'
             );
         }
