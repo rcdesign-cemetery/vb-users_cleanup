@@ -96,7 +96,11 @@ if ($_REQUEST['do'] == 'delete')
         $vbulletin->GPC['ruleid'],
         'users_cleanup',
         'remove',
-        'rule'
+        'rule',
+        0,
+        '',
+        'title',
+        'ruleid'
     );
 }
 
@@ -269,11 +273,6 @@ if ($_REQUEST['do'] == 'edit' OR $_REQUEST['do'] == 'add')
             '<select name="criteria[not_in_second_usergroup_x][condition1]" tabindex="1">' .
             construct_select_options($usergroup_options, (empty($criteria_cache['not_in_second_usergroup_x']) ? 6 : $criteria_cache['not_in_second_usergroup_x']['condition1'])) .
             '</select>'
-        ),
-        'user_id_not_in' => array(
-            '<input type="text" name="criteria[user_id_not_in][condition1]" size="5" class="bginput" tabindex="1" value="' .
-            $criteria_cache['user_id_not_in']['condition1'] .
-            '" />',
         ),
         'has_x_postcount' => array(
             '<input type="text" name="criteria[has_x_postcount][condition1]" size="5" class="bginput" tabindex="1" value="' .
@@ -653,14 +652,7 @@ if ($_REQUEST['do'] == 'test')
     $colspan = sizeof($header);
 
     print_form_header('user', 'dopruneusers');
-    print_table_header(
-        construct_phrase(
-            $vbphrase['showing_users_x_to_y_of_z'],
-            1,
-            $countusers['users'],
-            $countusers['users']
-        ),
-        $colspan);
+    print_table_header($vbphrase['uc_found_users'], $colspan);
     print_cells_row($header, 1);
 
     // now display the results

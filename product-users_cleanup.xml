@@ -54,7 +54,14 @@ $db->show_errors();]]></uninstallcode>
 		<code version="0.3">
 			<installcode><![CDATA[$db->query( "ALTER TABLE " . TABLE_PREFIX . "userscleanup CHANGE `userscleanupid` `ruleid` INT( 10 ) UNSIGNED NOT NULL AUTO_INCREMENT" );
 
-$db->query( "ALTER TABLE " . TABLE_PREFIX . "userscleanupcriteria CHANGE `userscleanupid` `ruleid` INT( 10 ) UNSIGNED NOT NULL" );]]></installcode>
+$db->query( "ALTER TABLE " . TABLE_PREFIX . "userscleanupcriteria CHANGE `userscleanupid` `ruleid` INT( 10 ) UNSIGNED NOT NULL" );
+
+// disable rules
+$db->query( "UPDATE
+                " . TABLE_PREFIX . "userscleanup
+            SET
+                `active` = 0" );
+]]></installcode>
 			<uninstallcode />
 		</code>
 	</codes>
@@ -97,15 +104,15 @@ This operation cannot be un-done.]]></phrase>
 			<phrase name="uc_add_new_rule" date="1298451188" username="varnak" version=""><![CDATA[Add new rule]]></phrase>
 			<phrase name="uc_admincp_menu_item" date="1298555989" username="varnak" version=""><![CDATA[Cleanup]]></phrase>
 			<phrase name="uc_deleted_userscleanup_successfully" date="1298451342" username="varnak" version=""><![CDATA[Deleted Users Cleanup Rule Successfully]]></phrase>
+			<phrase name="uc_found_users" date="1299412543" username="varnak" version=""><![CDATA[Found Users]]></phrase>
 			<phrase name="uc_has_never_posted_criteria" date="1299082318" username="varnak" version=""><![CDATA[User has never posted (also count in social groups and blogs).]]></phrase>
 			<phrase name="uc_has_x_postcount_criteria" date="1298450609" username="varnak" version=""><![CDATA[User's post-count is between {1} and {2} posts]]></phrase>
-			<phrase name="uc_has_x_reg_days_criteria" date="1298448544" username="varnak" version=""><![CDATA[User registered between {1} and {2} days ago]]></phrase>
+			<phrase name="uc_has_x_reg_days_criteria" date="1299349418" username="Vitaly" version=""><![CDATA[User registered between {1} and {2} days ago. Oldest first. For example: "from 30 to 3 days".]]></phrase>
 			<phrase name="uc_in_main_usergroup_x_criteria" date="1298448560" username="varnak" version=""><![CDATA[User belongs to main usergroup {1}]]></phrase>
 			<phrase name="uc_in_second_usergroup_x_criteria" date="1298448572" username="varnak" version=""><![CDATA[User belongs to secondary usergroup {1}]]></phrase>
 			<phrase name="uc_no_visit_in_x_days_criteria" date="1298450253" username="varnak" version=""><![CDATA[User has not visited for {1} days or more]]></phrase>
 			<phrase name="uc_not_in_main_usergroup_x_criteria" date="1298448594" username="varnak" version=""><![CDATA[User does not belong to main usergroup {1}]]></phrase>
 			<phrase name="uc_not_in_second_usergroup_x_criteria" date="1298448605" username="varnak" version=""><![CDATA[User does not belong to secondary usergroup {1}]]></phrase>
-			<phrase name="uc_user_id_not_in_criteria" date="1298450541" username="varnak" version=""><![CDATA[Users excluded from search {1} (comma separated ID list)]]></phrase>
 			<phrase name="uc_users_cleanup_rules_manager" date="1298451397" username="varnak" version=""><![CDATA[Users Cleanup Rules Manager]]></phrase>
 			<phrase name="uc_userscleanup_if_elipsis" date="1298451431" username="varnak" version=""><![CDATA[Apply this rule if...]]></phrase>
 		</phrasetype>
@@ -122,8 +129,18 @@ This operation cannot be un-done.]]></phrase>
 			<phrase name="uc_no_users_cleanup_criteria_active" date="1298450968" username="varnak" version=""><![CDATA[No active criteria]]></phrase>
 			<phrase name="uc_saved_users_cleanup_x_successfully" date="1298451466" username="varnak" version=""><![CDATA[Saved Users Cleanup rule <em>{1}</em> Successfully]]></phrase>
 		</phrasetype>
+		<phrasetype name="vBulletin Settings" fieldname="vbsettings">
+			<phrase name="setting_uc_user_id_not_in_desc" date="1299340116" username="varnak" version="0.3"><![CDATA[Users excluded from search (comma separated ID list)]]></phrase>
+			<phrase name="setting_uc_user_id_not_in_title" date="1299340116" username="varnak" version="0.3"><![CDATA[Excluded users]]></phrase>
+			<phrase name="settinggroup_users_cleanup" date="1299339821" username="varnak" version="0.3"><![CDATA[Users Cleanup]]></phrase>
+		</phrasetype>
 	</phrases>
 	<options>
+		<settinggroup name="users_cleanup" displayorder="65535">
+			<setting varname="uc_user_id_not_in" displayorder="10">
+				<datatype>free</datatype>
+			</setting>
+		</settinggroup>
 	</options>
 	<helptopics>
 	</helptopics>

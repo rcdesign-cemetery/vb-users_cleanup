@@ -61,11 +61,11 @@ function uc_get_users($criteria)
             case 'has_x_reg_days': //  Registration date
                 if (0 < (int)$conditions['condition1'])
                 {
-                    $where[] = '`user`.`joindate` <=' . (TIMENOW - $conditions['condition1'] * 86400);
+                    $where[] = '`user`.`joindate` >=' . (TIMENOW - $conditions['condition1'] * 86400);
                 }
                 if (0 < (int)$conditions['condition2'])
                 {
-                    $where[] = '`user`.`joindate` >=' . (TIMENOW - $conditions['condition2'] * 86400);
+                    $where[] = '`user`.`joindate` <=' . (TIMENOW - $conditions['condition2'] * 86400);
                 }
                 break;
             case 'no_visit_in_x_days': // Last visit date
@@ -100,12 +100,6 @@ function uc_get_users($criteria)
                     $where[] = "NOT FIND_IN_SET($group_id, `user`.membergroupids)";
                 }
                 break;
-            case 'user_id_not_in':
-                $ids = explode(',', $conditions['condition1']);
-                $ids = array_map('intval', $ids);
-                $ids = array_unique($ids);
-                $where[] = '`user`.`userid` NOT IN (' . implode(', ', $ids) . ')';
-                break;
             case 'has_x_postcount':
                 if (0 < (int)$conditions['condition1'])
                 {
@@ -133,6 +127,16 @@ function uc_get_users($criteria)
                 break;
         }
     }
+
+    // Exclude users
+    $ids = explode(',', $vbulletin->options['uc_user_id_not_in']);
+    if (!empty($ids))
+    {
+        $ids = array_map('intval', $ids);
+        $ids = array_unique($ids);
+        $where[] = '`user`.`userid` NOT IN (' . implode(', ', $ids) . ')';
+    }
+
     if (empty($where))
     {
         return $users;
