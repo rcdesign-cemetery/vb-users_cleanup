@@ -3,7 +3,7 @@
 <product productid="users_cleanup" active="1">
 	<title>Users Cleanup</title>
 	<description />
-	<version>0.3</version>
+	<version>0.4</version>
 	<url><![CDATA[http://www.vbulletin.org/forum/misc.php?do=producthelp&pid=users_cleanup]]></url>
 	<versioncheckurl><![CDATA[http://www.vbulletin.org/forum/misc.php?do=productcheck&pid=users_cleanup]]></versioncheckurl>
 	<apm_releasedate>0</apm_releasedate>

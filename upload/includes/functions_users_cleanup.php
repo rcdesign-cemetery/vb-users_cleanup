@@ -115,13 +115,13 @@ function uc_get_users($criteria)
                 $where[] = '`user`.`posts` = 0';
                 
                 // social groups
-                $join[] = 'LEFT JOIN ' . TABLE_PREFIX . 'groupmessage ON `groupmessage`.postuserid = `user`.userid';
+                $join[] = 'LEFT JOIN ' . TABLE_PREFIX . 'groupmessage AS groupmessage ON `groupmessage`.postuserid = `user`.userid';
                 $where[] = '`groupmessage`.gmid IS NULL';
 
                 // blog
                 if ($vbulletin->products['vbblog'])
                 {
-                    $join[] = 'LEFT JOIN ' . TABLE_PREFIX . 'blog_text ON `blog_text`.bloguserid = `user`.userid';
+                    $join[] = 'LEFT JOIN ' . TABLE_PREFIX . 'blog_text AS blog_text ON `blog_text`.bloguserid = `user`.userid';
                     $where[] = '`blog_text`.blogtextid IS NULL';
                 }
                 break;
